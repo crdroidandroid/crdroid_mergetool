@@ -1,0 +1,230 @@
+#!/bin/bash
+# Andrzej Perczak xNombre
+# A script to automatically merge ASB tags or lineage forks
+
+# Specify colors utilized in the terminal
+red=$(tput setaf 1)                         #  red
+grn=$(tput setaf 2)                         #  green
+ylw=$(tput setaf 3)                         #  yellow
+blu=$(tput setaf 4)                         #  blue
+cya=$(tput rev)$(tput bold)$(tput setaf 6)  #  bold cyan reversed
+ylr=$(tput rev)$(tput bold)$(tput setaf 3)  #  bold yellow reversed
+grr=$(tput rev)$(tput bold)$(tput setaf 2)  #  bold green reversed
+rer=$(tput rev)$(tput bold)$(tput setaf 1)  #  bold red reversed
+txtrst=$(tput sgr0)                         #  Reset
+
+DEBUG=0
+
+DRY_MODE=0
+SCRIPT_PATH=$(pwd)
+
+echo "Welcome to Merge Tool!"
+
+if [[ $1 == "-d" || DEBUG == 1 ]]; then
+    echo "Dry-mode activated!!"
+    DRY_MODE=1
+fi
+
+echo "Trying to detect Android sources root automatically..."
+
+if [ -e android_root ]; then
+    echo "... using saved path"
+    cd $(cat android_root) 2> /dev/null
+fi
+
+while [[ ! $(pwd) ==  "/" && ! -e "build/envsetup.sh" ]]
+do
+    cd ../
+done
+
+ANDROID_PATH=$(pwd)
+
+if [ $ANDROID_PATH == "/" ]; then
+    echo "Failed detecting path, enter full path manually:"
+    read -e -p "/" ANDROID_PATH
+    if [ -e "$ANDROID_PATH/build/envsetup.sh" ]; then
+        echo "Success! Saving your path to the file for future uses :)"
+        echo "/$ANDROID_PATH" > $SCRIPT_PATH/android_root
+    else
+        echo "Incorrect path!"
+        exit
+    fi
+else
+    echo "Succesfully detected path! $ANDROID_PATH"
+fi
+
+cd $SCRIPT_PATH
+
+echo ""
+echo "What do you want to merge?"
+echo "1 - new ASB tag"
+echo "2 - lineage forks"
+echo ${ylw}"=========================="${txtrst}
+echo "3 - push modified repos"
+
+read job
+
+clear
+
+fetch_and_merge() {
+    # Parameters:
+    # loc, link, tag, repo
+    
+    cd "$ANDROID_PATH/$loc"
+    OLD_HEAD=`git rev-parse HEAD`
+    
+    echo ${ylw}"Fetching git repository $repo..."${txtrst}
+    
+    ### Fixup some repo names ###
+    if [ $repo == "android_build_make" ]; then
+        link=${link//_make}
+    fi
+    if [ $repo == "android_packages_apps_PermissionController" ]; then
+        link=${link//PermissionController/PackageInstaller}
+    fi
+    ##############################
+
+    if [ $DRY_MODE == 1 ]; then
+        echo "git fetch -q "$link" "$tag""
+    else
+        git fetch -q "$link" "$tag"
+    fi
+    
+    echo ${ylw}"Merging fetched tag..."${txtrst}
+    
+    if [ $DRY_MODE == 1 ]; then
+        echo "git merge FETCH_HEAD -q"
+    else
+        git merge FETCH_HEAD -q
+    fi
+    
+    if [ $? == 0 ]; then
+        echo ${grn}"Merging $tag to $repo went well!"${txtrst}
+        NEW_HEAD=`git rev-parse HEAD`
+        if [ ! $NEW_HEAD == $OLD_HEAD ]; then
+            echo "$loc" >> $SCRIPT_PATH/merge_succeeded
+        fi
+    else
+        echo ${red}"Merging $tag to $repo generated conflicts. Fix manually!"${txtrst}
+        echo "$loc" >> $SCRIPT_PATH/merge_failed
+    fi
+}
+
+merge_tag() {
+    tag=$1
+    cat track_google | while read repo || [[ -n $repo ]];
+    do
+        loc=$repo
+        repo=${repo////_}
+        link="https://android.googlesource.com/platform/$loc"
+        fetch_and_merge
+    done
+}
+
+merge_los() {
+    tag=lineage-18.1
+    cat track_los | while read repo || [[ -n $repo ]];
+    do
+        loc=$repo
+        repo="android_${repo////_}"
+        link="https://github.com/lineageos/$repo"
+        fetch_and_merge
+    done
+}
+
+push_repos() {
+    cat merge_succeeded | while read repo
+    do
+        echo "Pushing $repo..."
+        
+        cd $repo
+        
+        if [ $DRY_MODE == 1 ]; then
+            echo "git push crdroid HEAD:11.0"
+        else
+            git push crdroid HEAD:11.0
+        fi
+        
+        if [ $? == 0 ]; then
+            echo "Push went well!"
+        else
+            echo ${red}"Push failed!"${txtrst}
+        fi
+    done
+}
+
+rm merge_failed 2> /dev/null
+
+case $job in
+    "1")
+        echo "Specify ASB tag revision"
+        read -p "android-11.0.0_r" revision
+        echo "Do you want to merge tag android-11.0.0_r$revision? Y/n"
+        read yesno
+        if [[ $yesno == "Y" || $yesno == "y" || $yesno == "" ]]; then
+            merge_tag "android-11.0.0_r$revision"
+        fi
+    ;;
+    "2")
+        echo "Do you want to fetch and merge all lineageos forks? Y/n"
+        read yesno
+        if [[ $yesno == "Y" || $yesno == "y" || $yesno == "" ]]; then
+            merge_los
+        fi
+    ;;
+    "3")
+        if [ ! -e merge_succeeded ]; then
+            echo "No merge in progress!"
+            exit
+        fi
+        if [ -e merge_failed ]; then
+            echo "Checking whether conflicts were solved..."
+            cat merge_failed | while read repo
+            do
+                if [ -e "$repo/.git/MERGE_HEAD" ]; then
+                    echo "$repo is not merged!"
+                    echo "(MERGE_HEAD is present)"
+                    exit
+                fi
+            done
+            echo "...success!"
+            cat merge_failed >> merge_succeeded
+        fi
+        
+        echo "You're going to push following repos:"
+        cat merge_succeeded | while read repo
+        do
+            echo ${grn}$repo${txtrst}
+        done
+        
+        echo "Are you sure you want to proceed? N/y"
+        
+        read yesno
+        if [[ $yesno == "Y" || $yesno == "y" ]]; then
+            push_repos
+            rm merge_succeeded merge_failed 2>/dev/null
+        fi
+        exit
+    ;;
+esac
+
+cd $SCRIPT_PATH
+
+if [ -e merge_succeeded ]; then
+    echo "Following repo merges succeeded:"
+    cat merge_succeeded | while read line
+    do
+        echo ${grn}$line${txtrst}
+    done
+fi
+
+if [ -e merge_failed ]; then
+    echo "Following repo merges generated conflicts:"
+    cat merge_failed | while read line
+    do
+        echo ${red}$line${txtrst}
+    done
+fi
+
+echo "Finished!"
+

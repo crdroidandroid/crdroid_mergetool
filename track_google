@@ -1,0 +1,11 @@
+external/skia
+frameworks/libs/systemui
+libcore
+prebuilts/abi-dumps/vndk
+system/hardware/interfaces
+system/iorap
+system/libhwbinder
+system/linkerconfig
+system/security
+system/sepolicy
+tools/metalava
