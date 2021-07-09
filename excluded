@@ -1,3 +1,4 @@
 packages/apps/Updater
 prebuilts/build-tools
 system/memory/lmkd
+vendor/lineage

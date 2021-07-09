@@ -4,7 +4,6 @@ bootable/recovery
 build/make
 build/soong
 external/libcxx
-external/wpa_supplicant_8
 frameworks/av
 frameworks/base
 frameworks/native
@@ -27,3 +26,4 @@ packages/services/Telephony
 system/core
 system/netd
 system/update_engine
+vendor/qcom/opensource/commonsys/packages/apps/Bluetooth

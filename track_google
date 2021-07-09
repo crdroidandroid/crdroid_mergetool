@@ -1,4 +1,5 @@
 external/skia
+external/wpa_supplicant_8
 frameworks/libs/systemui
 libcore
 prebuilts/abi-dumps/vndk
