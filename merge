@@ -8,9 +8,7 @@ grn=$(tput setaf 2)                         #  green
 ylw=$(tput setaf 3)                         #  yellow
 blu=$(tput setaf 4)                         #  blue
 cya=$(tput rev)$(tput bold)$(tput setaf 6)  #  bold cyan reversed
-ylr=$(tput rev)$(tput bold)$(tput setaf 3)  #  bold yellow reversed
 grr=$(tput rev)$(tput bold)$(tput setaf 2)  #  bold green reversed
-rer=$(tput rev)$(tput bold)$(tput setaf 1)  #  bold red reversed
 txtrst=$(tput sgr0)                         #  Reset
 
 DEBUG=0
@@ -18,9 +16,9 @@ DEBUG=0
 DRY_MODE=0
 SCRIPT_PATH=$(pwd)
 
-echo "Welcome to Merge Tool!"
+echo ${cya}"Welcome to Merge Tool!"${txtrst}
 
-if [[ $1 == "-d" || DEBUG == 1 ]]; then
+if [[ $1 == "-d" || $DEBUG == 1 ]]; then
     echo "Dry-mode activated!!"
     DRY_MODE=1
 fi
@@ -56,7 +54,7 @@ fi
 cd $SCRIPT_PATH
 
 echo ""
-echo "What do you want to merge?"
+echo ${ylw}"What do you want to merge?"${txtrst}
 echo "1 - new ASB tag"
 echo "2 - lineage forks"
 echo ${ylw}"=========================="${txtrst}
@@ -82,6 +80,9 @@ fetch_and_merge() {
     if [ $repo == "android_packages_apps_PermissionController" ]; then
         link=${link//PermissionController/PackageInstaller}
     fi
+    if [ $repo == "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth" ]; then
+        link=${link//commonsys_}
+    fi
     ##############################
 
     if [ $DRY_MODE == 1 ]; then
@@ -95,19 +96,23 @@ fetch_and_merge() {
     if [ $DRY_MODE == 1 ]; then
         echo "git merge FETCH_HEAD -q"
     else
-        git merge FETCH_HEAD -q
+        git merge FETCH_HEAD -q  >/dev/null 2>/dev/null
     fi
-    
+
     if [ $? == 0 ]; then
-        echo ${grn}"Merging $tag to $repo went well!"${txtrst}
         NEW_HEAD=`git rev-parse HEAD`
         if [ ! $NEW_HEAD == $OLD_HEAD ]; then
+            echo ${grn}"Merging $tag to $repo went well!"${txtrst}
             echo "$loc" >> $SCRIPT_PATH/merge_succeeded
+        else
+            echo ${blu}"No changes in tag $tag."${txtrst}
         fi
     else
         echo ${red}"Merging $tag to $repo generated conflicts. Fix manually!"${txtrst}
         echo "$loc" >> $SCRIPT_PATH/merge_failed
     fi
+
+    echo ""
 }
 
 merge_tag() {
@@ -133,11 +138,11 @@ merge_los() {
 }
 
 push_repos() {
-    cat merge_succeeded | while read repo
+    cat $SCRIPT_PATH/merge_succeeded | while read repo || [[ -n $repo ]];
     do
-        echo "Pushing $repo..."
+        echo ${ylw}"Pushing $repo..."${txtrst}
         
-        cd $repo
+        cd $ANDROID_PATH/$repo
         
         if [ $DRY_MODE == 1 ]; then
             echo "git push crdroid HEAD:11.0"
@@ -146,49 +151,51 @@ push_repos() {
         fi
         
         if [ $? == 0 ]; then
-            echo "Push went well!"
+            echo ${grn}"Push went well!"${txtrst}
         else
             echo ${red}"Push failed!"${txtrst}
         fi
     done
 }
 
-rm merge_failed 2> /dev/null
-
 case $job in
     "1")
-        echo "Specify ASB tag revision"
+        echo ${ylw}"Specify ASB tag revision"${txtrst}
         read -p "android-11.0.0_r" revision
-        echo "Do you want to merge tag android-11.0.0_r$revision? Y/n"
+        echo ${ylw}"Do you want to merge tag android-11.0.0_r$revision? Y/n"${txtrst}
         read yesno
+        clear
         if [[ $yesno == "Y" || $yesno == "y" || $yesno == "" ]]; then
             merge_tag "android-11.0.0_r$revision"
         fi
     ;;
     "2")
-        echo "Do you want to fetch and merge all lineageos forks? Y/n"
+        echo ${ylw}"Do you want to fetch and merge all lineageos forks? Y/n"${txtrst}
         read yesno
+        clear
         if [[ $yesno == "Y" || $yesno == "y" || $yesno == "" ]]; then
             merge_los
         fi
     ;;
     "3")
+        if [ -e merge_failed ]; then
+            echo "Checking whether conflicts were solved..."
+            cat merge_failed | while read repo || [[ -n $repo ]];
+            do
+                if [ -e "$ANDROID_PATH/$repo/.git/MERGE_HEAD" ]; then
+                    echo ${red}"$repo is not merged!"${txtrst}
+                    echo "(MERGE_HEAD is present)"
+                    exit 1
+                fi
+            done
+            [ $? == 1 ] && exit
+
+            echo "...great!"
+            cat merge_failed >> merge_succeeded
+        fi
         if [ ! -e merge_succeeded ]; then
             echo "No merge in progress!"
             exit
-        fi
-        if [ -e merge_failed ]; then
-            echo "Checking whether conflicts were solved..."
-            cat merge_failed | while read repo
-            do
-                if [ -e "$repo/.git/MERGE_HEAD" ]; then
-                    echo "$repo is not merged!"
-                    echo "(MERGE_HEAD is present)"
-                    exit
-                fi
-            done
-            echo "...success!"
-            cat merge_failed >> merge_succeeded
         fi
         
         echo "You're going to push following repos:"
@@ -226,5 +233,6 @@ if [ -e merge_failed ]; then
     done
 fi
 
-echo "Finished!"
+echo ""
+echo ${grr}"Finished!"${txtrst}
 
