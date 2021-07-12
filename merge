@@ -9,6 +9,7 @@ ylw=$(tput setaf 3)                         #  yellow
 blu=$(tput setaf 4)                         #  blue
 cya=$(tput rev)$(tput bold)$(tput setaf 6)  #  bold cyan reversed
 grr=$(tput rev)$(tput bold)$(tput setaf 2)  #  bold green reversed
+rer=$(tput rev)$(tput bold)$(tput setaf 1)  #  bold red reversed
 txtrst=$(tput sgr0)                         #  Reset
 
 DEBUG=0
@@ -59,6 +60,8 @@ echo "1 - new ASB tag"
 echo "2 - lineage forks"
 echo ${ylw}"=========================="${txtrst}
 echo "3 - push modified repos"
+echo ${ylw}"=========================="${txtrst}
+echo "4 - repopick new ASB tag from LineageOS"
 
 read job
 
@@ -212,6 +215,22 @@ case $job in
             rm merge_succeeded merge_failed 2>/dev/null
         fi
         exit
+    ;;
+    "4")
+        echo ${rer}"WARNING! This option is not recommended for production!"
+        echo "You should wait until Gerrit topic is merged!"${txtrst}
+        echo ""
+        echo ${ylw}"Keep in mind the topic has to be present on LineageOS Gerrit!"${txtrst}
+        echo ${ylw}"Specify ASB tag revision"${txtrst}
+        read -p "android-11.0.0_r" revision
+        echo ${ylw}"Do you want to repopick android-11.0.0_r$revision? Y/n"${txtrst}
+        read yesno
+        clear
+        if [[ $yesno == "Y" || $yesno == "y" || $yesno == "" ]]; then
+            cd $ANDROID_PATH
+            . build/envsetup.sh > /dev/null
+            repopick -q -t "android-11.0.0_r$revision" 2>/dev/null
+        fi
     ;;
 esac
 
