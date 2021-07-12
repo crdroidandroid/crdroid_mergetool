@@ -53,13 +53,14 @@ else
 fi
 
 echo ""
-echo ${ylw}"What do you want to merge?"${txtrst}
-echo "1 - new ASB tag"
-echo "2 - lineage forks"
-echo ${ylw}"=========================="${txtrst}
-echo "3 - push modified repos"
-echo ${ylw}"=========================="${txtrst}
-echo "4 - repopick new ASB tag from LineageOS"
+echo ${ylw}"========== SYNC ============"${txtrst}
+echo "1 - sync new ASB tag from google"
+echo "    (optionally repopick LineageOS ASB topic)"
+echo ${ylw}"========== MERGE ==========="${txtrst}
+echo "2 - merge new ASB tag"
+echo "3 - merge lineage forks"
+echo ${ylw}"========== PUSH ============"${txtrst}
+echo "4 - push modified repos"
 
 read job
 
@@ -68,12 +69,12 @@ clear
 fetch_and_merge() {
     # Parameters:
     # loc, link, tag, repo, msg
-    
+
     cd "$ANDROID_PATH/$loc"
     OLD_HEAD=`git rev-parse HEAD`
-    
+
     echo ${ylw}"Fetching git repository $repo..."${txtrst}
-    
+
     ### Fixup some repo names ###
     if [ $repo == "android_android" ]; then
         link=${link//_android}
@@ -94,9 +95,9 @@ fetch_and_merge() {
     else
         git fetch -q "$link" "$tag"
     fi
-    
+
     echo ${ylw}"Merging fetched tag..."${txtrst}
-    
+
     if [ $DRY_MODE == 1 ]; then
         echo "git merge FETCH_HEAD -q"
     else
@@ -147,15 +148,15 @@ push_repos() {
     cat $SCRIPT_PATH/merge_succeeded | while read repo || [[ -n $repo ]];
     do
         echo ${ylw}"Pushing $repo..."${txtrst}
-        
+
         cd $ANDROID_PATH/$repo
-        
+
         if [ $DRY_MODE == 1 ]; then
             echo "git push crdroid HEAD:11.0"
         else
             git push crdroid HEAD:11.0
         fi
-        
+
         if [ $? == 0 ]; then
             echo ${grn}"Push went well!"${txtrst}
         else
@@ -168,6 +169,44 @@ case $job in
     "1")
         echo ${ylw}"Specify ASB tag revision"${txtrst}
         read -p "android-11.0.0_r" revision
+        echo ${ylw}"This will modify your repo manifest and perform a force-sync!"
+        echo "Do you want to sync android-11.0.0_r$revision? y/N"${txtrst}
+        read yesno
+        clear
+        if [[ $yesno == "Y" || $yesno == "y" ]]; then
+            cd $ANDROID_PATH
+
+            rm $SCRIPT_PATH/merge_succeeded $SCRIPT_PATH/merge_failed 2>/dev/null
+
+            echo "Resetting repo manifest..."
+            (cd .repo/manifests && git checkout -- . )
+
+            echo ${ylw}"Syncing repo manifest..."${txtrst}
+            repo init -u git://github.com/crdroidandroid/android.git -b 11.0 -q
+
+            echo ${ylw}"Modifying release version in repo manifest..."${txtrst}
+            sed -i "s|android-11.0.0_r$(expr $revision - 1)|android-11.0.0_r$revision|g" .repo/manifests/default.xml
+
+            echo ${ylw}"Syncing new android release..."${txtrst}
+            repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags -q --optimized-fetch
+
+            echo ""
+            echo ${ylw}"Do you want to repopick Gerrit topic android-11.0.0_r$revision? y/N"${txtrst}
+            echo "Keep in mind the topic has to be present on LineageOS Gerrit!"
+            echo ${rer}"WARNING! This option is not recommended for production!"
+            echo "You should wait until Gerrit topic is merged!"${txtrst}
+            read yesno
+            clear
+            if [[ $yesno == "Y" || $yesno == "y" ]]; then
+                echo ${ylw}"Picking LineageOS Gerrit topic..."${txtrst}
+                . build/envsetup.sh > /dev/null
+                repopick -q -t "android-11.0.0_r$revision" 2>/dev/null
+            fi
+        fi
+    ;;
+    "2")
+        echo ${ylw}"Specify ASB tag revision"${txtrst}
+        read -p "android-11.0.0_r" revision
         echo ${ylw}"Do you want to merge tag android-11.0.0_r$revision? Y/n"${txtrst}
         read yesno
         clear
@@ -175,7 +214,7 @@ case $job in
             merge_tag "android-11.0.0_r$revision"
         fi
     ;;
-    "2")
+    "3")
         echo ${ylw}"Do you want to fetch and merge all lineageos forks? Y/n"${txtrst}
         read yesno
         clear
@@ -183,7 +222,7 @@ case $job in
             merge_los
         fi
     ;;
-    "3")
+    "4")
         if [ -e $SCRIPT_PATH/merge_failed ]; then
             echo "Checking whether conflicts were solved..."
             cat $SCRIPT_PATH/merge_failed | while read repo || [[ -n $repo ]];
@@ -203,49 +242,21 @@ case $job in
             echo "No merge in progress!"
             exit
         fi
-        
+
         echo "You're going to push following repos:"
         cat $SCRIPT_PATH/merge_succeeded | while read repo
         do
             echo ${grn}$repo${txtrst}
         done
-        
+
         echo "Are you sure you want to proceed? N/y"
-        
+
         read yesno
         if [[ $yesno == "Y" || $yesno == "y" ]]; then
             push_repos
             rm $SCRIPT_PATH/merge_succeeded $SCRIPT_PATH/merge_failed 2>/dev/null
         fi
         exit
-    ;;
-    "4")
-        echo ${rer}"WARNING! This option is not recommended for production!"
-        echo "You should wait until Gerrit topic is merged!"${txtrst}
-        echo ""
-        echo ${ylw}"Keep in mind the topic has to be present on LineageOS Gerrit!"${txtrst}
-        echo ${ylw}"Specify ASB tag revision"${txtrst}
-        read -p "android-11.0.0_r" revision
-        echo ${ylw}"This will modify your repo manifest and perform a force-sync!"
-        echo "Do you want to repopick android-11.0.0_r$revision? y/N"${txtrst}
-        read yesno
-        clear
-        if [[ $yesno == "Y" || $yesno == "y" ]]; then
-            cd $ANDROID_PATH
-
-            echo "Syncing repo manifest..."
-            repo init -u git://github.com/crdroidandroid/android.git -b 11.0 -q
-
-            echo "Modifying release version in repo manifest..."
-            sed -i "s|android-11.0.0_r$(expr $revision - 1)|android-11.0.0_r$revision|g" .repo/manifests/default.xml
-
-            echo "Syncing new android release..."
-            repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags -q --optimized-fetch
-
-            echo "Picking LineageOS Gerrit topic..."
-            . build/envsetup.sh > /dev/null
-            repopick -q -t "android-11.0.0_r$revision" 2>/dev/null
-        fi
     ;;
 esac
 
