@@ -226,11 +226,23 @@ case $job in
         echo ${ylw}"Keep in mind the topic has to be present on LineageOS Gerrit!"${txtrst}
         echo ${ylw}"Specify ASB tag revision"${txtrst}
         read -p "android-11.0.0_r" revision
-        echo ${ylw}"Do you want to repopick android-11.0.0_r$revision? Y/n"${txtrst}
+        echo ${ylw}"This will modify your repo manifest and perform a force-sync!"
+        echo "Do you want to repopick android-11.0.0_r$revision? y/N"${txtrst}
         read yesno
         clear
-        if [[ $yesno == "Y" || $yesno == "y" || $yesno == "" ]]; then
+        if [[ $yesno == "Y" || $yesno == "y" ]]; then
             cd $ANDROID_PATH
+
+            echo "Syncing repo manifest..."
+            repo init -u git://github.com/crdroidandroid/android.git -b 11.0 -q
+
+            echo "Modifying release version in repo manifest..."
+            sed -i "s|android-11.0.0_r$(expr $revision - 1)|android-11.0.0_r$revision|g" .repo/manifests/default.xml
+
+            echo "Syncing new android release..."
+            repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags -q --optimized-fetch
+
+            echo "Picking LineageOS Gerrit topic..."
             . build/envsetup.sh > /dev/null
             repopick -q -t "android-11.0.0_r$revision" 2>/dev/null
         fi
