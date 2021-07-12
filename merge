@@ -15,7 +15,7 @@ txtrst=$(tput sgr0)                         #  Reset
 DEBUG=0
 
 DRY_MODE=0
-SCRIPT_PATH=$(pwd)
+SCRIPT_PATH=$(cd $( dirname "${BASH_SOURCE[0]}") &> /dev/null && pwd)
 
 echo ${cya}"Welcome to Merge Tool!"${txtrst}
 
@@ -26,9 +26,9 @@ fi
 
 echo "Trying to detect Android sources root automatically..."
 
-if [ -e android_root ]; then
+if [ -e $SCRIPT_PATH/android_root ]; then
     echo "... using saved path"
-    cd $(cat android_root) 2> /dev/null
+    cd $(cat $SCRIPT_PATH/android_root) 2> /dev/null
 fi
 
 while [[ ! $(pwd) ==  "/" && ! -e "build/envsetup.sh" ]]
@@ -51,8 +51,6 @@ if [ $ANDROID_PATH == "/" ]; then
 else
     echo "Succesfully detected path! $ANDROID_PATH"
 fi
-
-cd $SCRIPT_PATH
 
 echo ""
 echo ${ylw}"What do you want to merge?"${txtrst}
@@ -124,7 +122,7 @@ fetch_and_merge() {
 merge_tag() {
     tag=$1
     msg="Merge tag '$tag' into 11.0"
-    cat track_google | while read repo || [[ -n $repo ]];
+    cat $SCRIPT_PATH/track_google | while read repo || [[ -n $repo ]];
     do
         loc=$repo
         repo=${repo////_}
@@ -136,7 +134,7 @@ merge_tag() {
 merge_los() {
     tag=lineage-18.1
     msg="Merge 'lineage-18.1' into 11.0"
-    cat track_los | while read repo || [[ -n $repo ]];
+    cat $SCRIPT_PATH/track_los | while read repo || [[ -n $repo ]];
     do
         loc=$repo
         repo="android_${repo////_}"
@@ -186,9 +184,9 @@ case $job in
         fi
     ;;
     "3")
-        if [ -e merge_failed ]; then
+        if [ -e $SCRIPT_PATH/merge_failed ]; then
             echo "Checking whether conflicts were solved..."
-            cat merge_failed | while read repo || [[ -n $repo ]];
+            cat $SCRIPT_PATH/merge_failed | while read repo || [[ -n $repo ]];
             do
                 if [ -e "$ANDROID_PATH/$repo/.git/MERGE_HEAD" ]; then
                     echo ${red}"$repo is not merged!"${txtrst}
@@ -199,15 +197,15 @@ case $job in
             [ $? == 1 ] && exit
 
             echo "...great!"
-            cat merge_failed >> merge_succeeded
+            cat $SCRIPT_PATH/merge_failed >> $SCRIPT_PATH/merge_succeeded
         fi
-        if [ ! -e merge_succeeded ]; then
+        if [ ! -e $SCRIPT_PATH/merge_succeeded ]; then
             echo "No merge in progress!"
             exit
         fi
         
         echo "You're going to push following repos:"
-        cat merge_succeeded | while read repo
+        cat $SCRIPT_PATH/merge_succeeded | while read repo
         do
             echo ${grn}$repo${txtrst}
         done
@@ -217,7 +215,7 @@ case $job in
         read yesno
         if [[ $yesno == "Y" || $yesno == "y" ]]; then
             push_repos
-            rm merge_succeeded merge_failed 2>/dev/null
+            rm $SCRIPT_PATH/merge_succeeded $SCRIPT_PATH/merge_failed 2>/dev/null
         fi
         exit
     ;;
@@ -239,19 +237,17 @@ case $job in
     ;;
 esac
 
-cd $SCRIPT_PATH
-
-if [ -e merge_succeeded ]; then
+if [ -e $SCRIPT_PATH/merge_succeeded ]; then
     echo "Following repo merges succeeded:"
-    cat merge_succeeded | while read line
+    cat $SCRIPT_PATH/merge_succeeded | while read line
     do
         echo ${grn}$line${txtrst}
     done
 fi
 
-if [ -e merge_failed ]; then
+if [ -e $SCRIPT_PATH/merge_failed ]; then
     echo "Following repo merges generated conflicts:"
-    cat merge_failed | while read line
+    cat $SCRIPT_PATH/merge_failed | while read line
     do
         echo ${red}$line${txtrst}
     done
