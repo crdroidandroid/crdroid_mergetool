@@ -255,6 +255,12 @@ case $job in
         if [[ $yesno == "Y" || $yesno == "y" ]]; then
             push_repos
             rm $SCRIPT_PATH/merge_succeeded $SCRIPT_PATH/merge_failed 2>/dev/null
+
+            echo "Resetting repo manifest..."
+            (cd .repo/manifests && git checkout -- . )
+
+            echo ${ylw}"Syncing repo manifest..."${txtrst}
+            repo init -u git://github.com/crdroidandroid/android.git -b 11.0 -q
         fi
         exit
     ;;
