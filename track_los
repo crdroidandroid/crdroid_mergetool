@@ -1,3 +1,4 @@
+android
 art
 bionic
 bootable/recovery
@@ -25,5 +26,6 @@ packages/services/Telecomm
 packages/services/Telephony
 system/core
 system/netd
+system/sepolicy
 system/update_engine
 vendor/qcom/opensource/commonsys/packages/apps/Bluetooth

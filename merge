@@ -77,6 +77,9 @@ fetch_and_merge() {
     echo ${ylw}"Fetching git repository $repo..."${txtrst}
     
     ### Fixup some repo names ###
+    if [ $repo == "android_android" ]; then
+        link=${link//_android}
+    fi
     if [ $repo == "android_build_make" ]; then
         link=${link//_make}
     fi
