@@ -69,7 +69,7 @@ clear
 
 fetch_and_merge() {
     # Parameters:
-    # loc, link, tag, repo
+    # loc, link, tag, repo, msg
     
     cd "$ANDROID_PATH/$loc"
     OLD_HEAD=`git rev-parse HEAD`
@@ -99,7 +99,7 @@ fetch_and_merge() {
     if [ $DRY_MODE == 1 ]; then
         echo "git merge FETCH_HEAD -q"
     else
-        git merge FETCH_HEAD -q  >/dev/null 2>/dev/null
+        git merge FETCH_HEAD -q --no-ff -m "$msg" --signoff >/dev/null 2>/dev/null
     fi
 
     if [ $? == 0 ]; then
@@ -120,6 +120,7 @@ fetch_and_merge() {
 
 merge_tag() {
     tag=$1
+    msg="Merge tag '$tag' into 11.0"
     cat track_google | while read repo || [[ -n $repo ]];
     do
         loc=$repo
@@ -131,6 +132,7 @@ merge_tag() {
 
 merge_los() {
     tag=lineage-18.1
+    msg="Merge 'lineage-18.1' into 11.0"
     cat track_los | while read repo || [[ -n $repo ]];
     do
         loc=$repo
