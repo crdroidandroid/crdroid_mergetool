@@ -4,6 +4,7 @@ frameworks/libs/systemui
 libcore
 prebuilts/abi-dumps/vndk
 system/hardware/interfaces
+system/hwservicemanager
 system/iorap
 system/libhwbinder
 system/linkerconfig

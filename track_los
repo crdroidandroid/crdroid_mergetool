@@ -28,4 +28,5 @@ system/core
 system/netd
 system/sepolicy
 system/update_engine
+tools/extract-utils
 vendor/qcom/opensource/commonsys/packages/apps/Bluetooth
