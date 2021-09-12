@@ -279,7 +279,7 @@ case $job in
 esac
 
 if [ -e $SCRIPT_PATH/merge_succeeded ]; then
-    echo "Following repo merges succeeded:"
+    echo "Following repos merged successfully:"
     cat $SCRIPT_PATH/merge_succeeded | while read line
     do
         echo ${grn}$line${txtrst}
@@ -287,7 +287,8 @@ if [ -e $SCRIPT_PATH/merge_succeeded ]; then
 fi
 
 if [ -e $SCRIPT_PATH/merge_failed ]; then
-    echo "Following repo merges generated conflicts:"
+    echo "Following repos merge failed:"
+    echo "Repair conflicts and merge manually."
     cat $SCRIPT_PATH/merge_failed | while read line
     do
         echo ${red}$line${txtrst}
