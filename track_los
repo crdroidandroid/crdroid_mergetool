@@ -15,6 +15,7 @@ hardware/lineage/interfaces
 lineage-sdk
 packages/apps/Contacts
 packages/apps/Dialer
+packages/apps/Launcher3
 packages/apps/LineageParts
 packages/apps/Messaging
 packages/apps/PermissionController
@@ -29,4 +30,7 @@ system/netd
 system/sepolicy
 system/update_engine
 tools/extract-utils
+vendor/qcom/opensource/commonsys-intf/bluetooth
+vendor/qcom/opensource/commonsys/bluetooth_ext
 vendor/qcom/opensource/commonsys/packages/apps/Bluetooth
+vendor/qcom/opensource/commonsys/system/bt

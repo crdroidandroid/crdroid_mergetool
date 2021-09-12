@@ -88,6 +88,18 @@ fetch_and_merge() {
     if [ $repo == "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth" ]; then
         link=${link//commonsys_}
     fi
+    if [ $repo == "android_vendor_qcom_opensource_commonsys_bluetooth_ext" ]; then
+        link=${link//commonsys_}
+    fi
+    if [ $repo == "android_vendor_qcom_opensource_commonsys_system_bt" ]; then
+        link=${link//commonsys_}
+    fi
+    if [ $repo == "android_vendor_qcom_opensource_commonsys-intf_bluetooth" ]; then
+        link=${link//commonsys-intf_bluetooth/bluetooth-commonsys-intf}
+    fi
+    if [ $repo == "android_packages_apps_Launcher3" ]; then
+        link=${link//Launcher3/Trebuchet}
+    fi
     ##############################
 
     if [ $DRY_MODE == 1 ]; then
