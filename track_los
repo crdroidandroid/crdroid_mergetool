@@ -29,6 +29,7 @@ system/core
 system/netd
 system/sepolicy
 system/update_engine
+system/vold
 tools/extract-utils
 vendor/qcom/opensource/commonsys-intf/bluetooth
 vendor/qcom/opensource/commonsys/bluetooth_ext
