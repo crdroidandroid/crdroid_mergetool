@@ -12,6 +12,7 @@ frameworks/opt/net/wifi
 frameworks/opt/telephony
 hardware/interfaces
 hardware/lineage/interfaces
+libcore
 lineage-sdk
 packages/apps/Contacts
 packages/apps/Dialer
