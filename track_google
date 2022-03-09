@@ -1,12 +1,7 @@
-external/skia
-external/wpa_supplicant_8
-frameworks/libs/systemui
+external/jemalloc_new
+frameworks/opt/net/ims
+libcore
+packages/apps/Nfc
 prebuilts/abi-dumps/vndk
-system/hardware/interfaces
-system/hwservicemanager
-system/iorap
+system/memory/lmkd
 system/libhwbinder
-system/linkerconfig
-system/security
-system/sepolicy
-tools/metalava
