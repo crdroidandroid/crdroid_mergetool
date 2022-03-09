@@ -53,14 +53,16 @@ else
 fi
 
 echo ""
-echo ${ylw}"========== SYNC ============"${txtrst}
+echo ${ylw}"=========== SYNC ==========="${txtrst}
 echo "1 - sync new ASB tag from google"
 echo "    (optionally repopick LineageOS ASB topic)"
 echo ${ylw}"========== MERGE ==========="${txtrst}
 echo "2 - merge new ASB tag"
 echo "3 - merge lineage forks"
-echo ${ylw}"========== PUSH ============"${txtrst}
+echo ${ylw}"=========== PUSH ==========="${txtrst}
 echo "4 - push modified repos"
+echo ${ylw}"========== ABORT ==========="${txtrst}
+echo "5 - abort all merges"
 
 read job
 
@@ -274,6 +276,22 @@ case $job in
             echo ${ylw}"Syncing repo manifest..."${txtrst}
             repo init -u git://github.com/crdroidandroid/android.git -b 11.0 -q
         fi
+        exit
+    ;;
+    "5")
+        cat $SCRIPT_PATH/merge_succeeded | while read line
+        do
+            cd $ANDROID_PATH/$line
+            echo ${blu}$line${txtrst}
+            git reset --merge HEAD@{1}
+        done
+        cat $SCRIPT_PATH/merge_failed | while read line
+        do
+            cd $ANDROID_PATH/$line
+            echo ${blu}$line${txtrst}
+            git merge --abort
+        done
+        rm $SCRIPT_PATH/merge_succeeded $SCRIPT_PATH/merge_failed
         exit
     ;;
 esac
