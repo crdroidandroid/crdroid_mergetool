@@ -1,7 +1,7 @@
-external/jemalloc_new
+frameworks/libs/systemui
 frameworks/opt/net/ims
 libcore
-packages/apps/Nfc
+prebuilts/abi-dumps/ndk
 prebuilts/abi-dumps/vndk
-system/memory/lmkd
 system/libhwbinder
+system/memory/lmkd
