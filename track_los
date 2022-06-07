@@ -36,12 +36,8 @@ packages/modules/Wifi
 packages/services/Telecomm
 system/bt
 system/core
-system/security
 system/sepolicy
 system/update_engine
 system/vold
-vendor/qcom/opensource/commonsys-intf/bluetooth
-vendor/qcom/opensource/commonsys/bluetooth_ext
 vendor/qcom/opensource/commonsys/packages/apps/Bluetooth
 vendor/qcom/opensource/commonsys/system/bt
-vendor/qcom/opensource/cryptfs_hw

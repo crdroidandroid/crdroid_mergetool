@@ -4,4 +4,3 @@ libcore
 prebuilts/abi-dumps/ndk
 prebuilts/abi-dumps/vndk
 system/libhwbinder
-system/memory/lmkd
