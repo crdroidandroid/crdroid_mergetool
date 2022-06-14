@@ -167,9 +167,9 @@ push_repos() {
         cd $ANDROID_PATH/$repo
 
         if [ $DRY_MODE == 1 ]; then
-            echo "git push crdroid HEAD:12.1"
+            echo "git push crdroid HEAD:12.1 $1"
         else
-            git push crdroid HEAD:12.1
+            git push crdroid HEAD:12.1 $1
         fi
 
         if [ $? == 0 ]; then
@@ -264,18 +264,21 @@ case $job in
             echo ${grn}$repo${txtrst}
         done
 
-        echo "Are you sure you want to proceed? N/y"
+        echo "Are you sure you want to proceed? N/y/f (force push)"
 
         read yesno
-        if [[ $yesno == "Y" || $yesno == "y" ]]; then
-            push_repos
+        if [[ $yesno == "Y" || $yesno == "y" || $yesno == "f" ]]; then
+			if [[ $yesno == "f" ]]; then
+				force="-f"
+			fi
+            push_repos $force
             rm $SCRIPT_PATH/merge_succeeded $SCRIPT_PATH/merge_failed 2>/dev/null
 
             echo "Resetting repo manifest..."
             (cd .repo/manifests && git checkout -- . )
 
             echo ${ylw}"Syncing repo manifest..."${txtrst}
-            repo init -u git://github.com/crdroidandroid/android.git -b 12.1 -q
+            repo init -u https://github.com/crdroidandroid/android.git -b 12.1
         fi
         exit
     ;;
