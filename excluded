@@ -10,4 +10,5 @@ external/sqlite
 external/zlib
 frameworks/base
 prebuilts/build-tools
+system/memory/lmkd
 vendor/lineage

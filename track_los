@@ -23,7 +23,6 @@ packages/apps/Messaging
 packages/apps/Nfc
 packages/apps/Profiles
 packages/apps/Settings
-packages/apps/SettingsIntelligence
 packages/apps/SetupWizard
 packages/apps/SimpleDeviceConfig
 packages/apps/ThemePicker
