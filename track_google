@@ -1,6 +1,8 @@
-frameworks/libs/systemui
+art
+external/fastrpc
+external/selinux
+external/vixl
+frameworks/libs/net
 frameworks/opt/net/ims
-libcore
-prebuilts/abi-dumps/ndk
-prebuilts/abi-dumps/vndk
-system/libhwbinder
+system/memory/lmkd
+system/netd

@@ -1,14 +1,10 @@
 external/arm-optimized-routines
-external/freetype
-external/giflib
 external/harfbuzz_ng
 external/jemalloc_new
 external/libjpeg-turbo
 external/libvpx
-external/OpenCSD
 external/sqlite
-external/zlib
 frameworks/base
+packages/apps/Launcher3
 prebuilts/build-tools
-system/memory/lmkd
 vendor/lineage

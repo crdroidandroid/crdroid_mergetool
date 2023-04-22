@@ -84,10 +84,6 @@ fetch_and_merge() {
     if [ $repo == "android_build_make" ]; then
         link=${link//_make}
     fi
-    if [ $repo == "android_device_qcom_sepolicy-legacy-um" ]; then
-        link=${link//-legacy-um}
-        tag="lineage-19.1-legacy-um"
-    fi
     if [ $repo == "android_vendor_qcom_opensource_commonsys_packages_apps_Bluetooth" ]; then
         link=${link//commonsys_}
     fi
@@ -137,7 +133,7 @@ fetch_and_merge() {
 
 merge_tag() {
     tag=$1
-    msg="Merge tag '$tag' into 12.1"
+    msg="Merge tag '$tag' into 13.0"
     cat $SCRIPT_PATH/track_google | while read repo || [[ -n $repo ]];
     do
         loc=$repo
@@ -148,10 +144,10 @@ merge_tag() {
 }
 
 merge_los() {
-    msg="Merge 'lineage-19.1' into 12.1"
+    msg="Merge 'lineage-20.0' into 13.0"
     cat $SCRIPT_PATH/track_los | while read repo || [[ -n $repo ]];
     do
-        tag=lineage-19.1
+        tag=lineage-20.0
         loc=$repo
         repo="android_${repo////_}"
         link="https://github.com/lineageos/$repo"
@@ -167,9 +163,9 @@ push_repos() {
         cd $ANDROID_PATH/$repo
 
         if [ $DRY_MODE == 1 ]; then
-            echo "git push crdroid HEAD:12.1 $1"
+            echo "git push crdroid HEAD:13.0 $1"
         else
-            git push crdroid HEAD:12.1 $1
+            git push crdroid HEAD:13.0 $1
         fi
 
         if [ $? == 0 ]; then
@@ -183,9 +179,9 @@ push_repos() {
 case $job in
     "1")
         echo ${ylw}"Specify ASB tag revision"${txtrst}
-        read -p "android-12.1.0_r" revision
+        read -p "android-13.0.0_r" revision
         echo ${ylw}"This will modify your repo manifest and perform a force-sync!"
-        echo "Do you want to sync android-12.1.0_r$revision? y/N"${txtrst}
+        echo "Do you want to sync android-13.0.0_r$revision? y/N"${txtrst}
         read yesno
         clear
         if [[ $yesno == "Y" || $yesno == "y" ]]; then
@@ -197,16 +193,16 @@ case $job in
             (cd .repo/manifests && git checkout -- . )
 
             echo ${ylw}"Syncing repo manifest..."${txtrst}
-            repo init -u git://github.com/crdroidandroid/android.git -b 12.1 -q
+            repo init -u git://github.com/crdroidandroid/android.git -b 13.0 -q --git-lfs
 
             echo ${ylw}"Modifying release version in repo manifest..."${txtrst}
-            sed -i "s|android-12.1.0_r$(expr $revision - 1)|android-12.1.0_r$revision|g" .repo/manifests/default.xml
+            sed -i "s|android-13.0.0_r$(expr $revision - 1)|android-13.0.0_r$revision|g" .repo/manifests/default.xml
 
             echo ${ylw}"Syncing new android release..."${txtrst}
             repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags -q --optimized-fetch
 
             echo ""
-            echo ${ylw}"Do you want to repopick Gerrit topic android-12.1.0_r$revision? y/N"${txtrst}
+            echo ${ylw}"Do you want to repopick Gerrit topic android-13.0.0_r$revision? y/N"${txtrst}
             echo "Keep in mind the topic has to be present on LineageOS Gerrit!"
             echo ${rer}"WARNING! This option is not recommended for production!"
             echo "You should wait until Gerrit topic is merged!"${txtrst}
@@ -215,18 +211,18 @@ case $job in
             if [[ $yesno == "Y" || $yesno == "y" ]]; then
                 echo ${ylw}"Picking LineageOS Gerrit topic..."${txtrst}
                 . build/envsetup.sh > /dev/null
-                repopick -q -t "android-12.1.0_r$revision" 2>/dev/null
+                repopick -q -t "android-13.0.0_r$revision" 2>/dev/null
             fi
         fi
     ;;
     "2")
         echo ${ylw}"Specify ASB tag revision"${txtrst}
-        read -p "android-12.1.0_r" revision
-        echo ${ylw}"Do you want to merge tag android-12.1.0_r$revision? Y/n"${txtrst}
+        read -p "android-13.0.0_r" revision
+        echo ${ylw}"Do you want to merge tag android-13.0.0_r$revision? Y/n"${txtrst}
         read yesno
         clear
         if [[ $yesno == "Y" || $yesno == "y" || $yesno == "" ]]; then
-            merge_tag "android-12.1.0_r$revision"
+            merge_tag "android-13.0.0_r$revision"
         fi
     ;;
     "3")
@@ -278,7 +274,7 @@ case $job in
             (cd .repo/manifests && git checkout -- . )
 
             echo ${ylw}"Syncing repo manifest..."${txtrst}
-            repo init -u https://github.com/crdroidandroid/android.git -b 12.1
+            repo init -u https://github.com/crdroidandroid/android.git -b 13.0 --git-lfs
         fi
         exit
     ;;
