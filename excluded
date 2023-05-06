@@ -6,5 +6,6 @@ external/libvpx
 external/sqlite
 frameworks/base
 packages/apps/Launcher3
+packages/resources/devicesettings
 prebuilts/build-tools
 vendor/lineage

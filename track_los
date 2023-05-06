@@ -33,7 +33,6 @@ packages/inputmethods/LatinIME
 packages/modules/Connectivity
 packages/modules/Permission
 packages/modules/Wifi
-packages/resources/devicesettings
 packages/services/Telecomm
 system/core
 system/memory/lmkd
