@@ -5,6 +5,7 @@ bootable/recovery
 build/make
 build/soong
 device/lineage/sepolicy
+external/libvpx
 external/setupcompat
 frameworks/av
 frameworks/libs/net
